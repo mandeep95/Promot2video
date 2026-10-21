@@ -7,60 +7,107 @@
 <style>
   :root{
     --teal:#0b2c29; --teal2:#14524b; --cream:#f3eee3; --paper:#faf3e4;
-    --gold:#cdab6e; --terra:#c75b39; --ink:#2b2118;
+    --gold:#cdab6e; --terra:#c75b39; --ink:#2b2118; --green:#2e7d4f;
   }
   *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
   body{font-family:Georgia,'Times New Roman',serif;background:var(--cream);color:var(--ink)}
+  ::selection{background:var(--gold);color:var(--teal)}
   .sans{font-family:Helvetica,Arial,sans-serif}
-  header{background:var(--teal);color:var(--cream);padding:64px 24px 54px}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  @keyframes expandX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes popIn{from{opacity:0;transform:scale(.96) translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes stripes{from{background-position:0 0}to{background-position:28px 0}}
+  @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.55}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 rgba(205,171,110,.45)}50%{box-shadow:0 0 0 7px rgba(205,171,110,0)}}
+
+  header{background:
+    radial-gradient(640px 300px at 85% -60px, rgba(205,171,110,.22), transparent 65%),
+    linear-gradient(160deg, var(--teal) 55%, var(--teal2));
+    color:var(--cream);padding:64px 24px 54px;overflow:hidden}
   .wrap{max-width:880px;margin:0 auto}
-  .kicker{font-family:Helvetica,Arial,sans-serif;letter-spacing:5px;font-size:13px;color:var(--gold);text-transform:uppercase}
-  .rule{width:110px;height:6px;background:var(--gold);margin:16px 0 26px}
+  .kicker{font-family:Helvetica,Arial,sans-serif;letter-spacing:5px;font-size:13px;color:var(--gold);text-transform:uppercase;animation:fadeUp .7s both}
+  .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:#57d977;margin-right:9px;animation:pulseDot 1.6s infinite;vertical-align:1px}
+  .rule{width:110px;height:6px;background:var(--gold);margin:16px 0 26px;transform-origin:left;animation:expandX .8s .15s both}
   h1{font-family:Helvetica,Arial,sans-serif;font-weight:900;font-size:clamp(42px,8vw,84px);line-height:.98;letter-spacing:-1px}
+  h1 .hl{display:block;animation:fadeUp .7s both}
+  h1 .hl:nth-child(2){animation-delay:.14s}
+  h1 .hl:nth-child(3){animation-delay:.28s}
   h1 .gold{color:var(--gold)}
-  header p{margin-top:22px;font-size:19px;line-height:1.55;max-width:620px;opacity:.92}
-  .flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:1px}
-  .flow span{border:1px solid rgba(243,238,227,.4);border-radius:99px;padding:8px 16px}
+  header p{margin-top:22px;font-size:19px;line-height:1.55;max-width:620px;opacity:.92;animation:fadeUp .7s .4s both}
+  .flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:1px;animation:fadeUp .7s .55s both}
+  .flow span{border:1px solid rgba(243,238,227,.4);border-radius:99px;padding:8px 16px;transition:transform .25s,border-color .25s}
+  .flow span:hover{transform:translateY(-3px);border-color:var(--gold)}
   .flow b{color:var(--gold)}
   main{padding:44px 24px 70px}
-  .card{background:var(--paper);border:1px solid #e2d5b8;border-radius:18px;padding:28px;margin-bottom:26px;box-shadow:0 10px 30px rgba(43,33,24,.06)}
+  .card{background:var(--paper);border:1px solid #e2d5b8;border-radius:18px;padding:28px;margin-bottom:26px;box-shadow:0 10px 30px rgba(43,33,24,.06);animation:fadeUp .6s both;transition:box-shadow .3s,transform .3s}
+  .card:hover{box-shadow:0 18px 44px rgba(43,33,24,.11)}
+  main .card:nth-child(2){animation-delay:.12s}
+  main .card:nth-child(3){animation-delay:.22s}
   .step{font-family:Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:3px;color:var(--terra);text-transform:uppercase;margin-bottom:14px}
   h2{font-family:Helvetica,Arial,sans-serif;font-size:26px;font-weight:800;margin-bottom:16px}
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-  .tab{font-family:Helvetica,Arial,sans-serif;font-size:14px;padding:10px 18px;border-radius:99px;border:2px solid var(--teal);background:transparent;color:var(--teal);cursor:pointer;font-weight:700}
-  .tab.on{background:var(--teal);color:var(--cream)}
+  .tab{font-family:Helvetica,Arial,sans-serif;font-size:14px;padding:10px 18px;border-radius:99px;border:2px solid var(--teal);background:transparent;color:var(--teal);cursor:pointer;font-weight:700;transition:all .25s}
+  .tab:hover{transform:translateY(-2px)}
+  .tab.on{background:var(--teal);color:var(--cream);box-shadow:0 6px 16px rgba(11,44,41,.28)}
   label{display:block;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:.4px;margin:16px 0 7px}
-  textarea,input,select{width:100%;font-family:Helvetica,Arial,sans-serif;font-size:16px;padding:13px 14px;border:1.5px solid #cdbd97;border-radius:12px;background:#fff;color:var(--ink)}
+  textarea,input,select{width:100%;font-family:Helvetica,Arial,sans-serif;font-size:16px;padding:13px 14px;border:1.5px solid #cdbd97;border-radius:12px;background:#fff;color:var(--ink);transition:border-color .25s,box-shadow .25s}
+  textarea:focus,input:focus,select:focus{outline:none;border-color:var(--teal2);box-shadow:0 0 0 4px rgba(20,82,75,.14)}
   textarea{line-height:1.5;resize:vertical}
   .hint{font-size:13.5px;opacity:.75;margin-top:7px;line-height:1.5}
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-  .chip{font-family:Helvetica,Arial,sans-serif;font-size:13px;background:#efe3c8;border:1px solid #d9c491;padding:7px 13px;border-radius:99px;cursor:pointer}
-  .btn{font-family:Helvetica,Arial,sans-serif;font-weight:800;font-size:17px;border:none;border-radius:14px;padding:16px 26px;cursor:pointer;margin-top:22px;width:100%}
-  .btn.primary{background:var(--terra);color:#fff}
-  .btn.dark{background:var(--teal);color:var(--cream)}
-  .btn:disabled{opacity:.5;cursor:wait}
-  .err{display:none;background:#fbe9e4;border:1px solid var(--terra);color:#7c2d1c;border-radius:12px;padding:13px 16px;margin-top:16px;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.5}
-  .scene{border:1.5px dashed #cdbd97;border-radius:14px;padding:18px;margin-top:16px;background:#fff}
+  .chip{font-family:Helvetica,Arial,sans-serif;font-size:13px;background:#efe3c8;border:1px solid #d9c491;padding:7px 13px;border-radius:99px;cursor:pointer;transition:transform .2s,background .2s;display:inline-block}
+  .chip:hover{transform:translateY(-2px);background:#f4e9cf}
+  .btn{font-family:Helvetica,Arial,sans-serif;font-weight:800;font-size:17px;border:none;border-radius:14px;padding:16px 26px;cursor:pointer;margin-top:22px;width:100%;position:relative;overflow:hidden;transition:transform .15s,filter .25s}
+  .btn:hover{filter:brightness(1.07)}
+  .btn:active{transform:scale(.985)}
+  .btn::after{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .55s}
+  .btn:hover::after{left:130%}
+  .btn.primary{background:linear-gradient(135deg,var(--terra),#d96f47);color:#fff;box-shadow:0 10px 24px rgba(199,91,57,.32)}
+  .btn.dark{background:linear-gradient(135deg,var(--teal),var(--teal2));color:var(--cream);box-shadow:0 10px 24px rgba(11,44,41,.3)}
+  .btn:disabled{opacity:.55;cursor:wait;animation:glowPulse 1.4s infinite}
+  .err{display:none;background:#fbe9e4;border:1px solid var(--terra);color:#7c2d1c;border-radius:12px;padding:13px 16px;margin-top:16px;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.5;animation:popIn .3s both}
+  .scene{border:1.5px dashed #cdbd97;border-radius:14px;padding:18px;margin-top:16px;background:#fff;animation:popIn .45s both;transition:border-color .25s,box-shadow .25s}
+  .scene:hover{border-color:var(--gold);box-shadow:0 8px 22px rgba(43,33,24,.07)}
   .scene h3{font-family:Helvetica,Arial,sans-serif;font-size:15px;margin-bottom:6px}
   .scene h3 .v{color:var(--terra)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-  .bar{height:16px;background:#e7dcc0;border-radius:99px;overflow:hidden;margin-top:14px;display:none}
-  .bar i{display:block;height:100%;width:0;background:var(--terra);transition:width .5s}
-  .status{font-family:Helvetica,Arial,sans-serif;font-size:14.5px;margin-top:12px;display:none;line-height:1.5}
-  video{width:100%;max-width:400px;border-radius:16px;display:none;margin:20px auto 0;background:#000}
-  .dl{display:none;text-align:center;margin-top:14px}
+  .prow{display:none;gap:18px;align-items:center;margin-top:20px;animation:fadeUp .4s both}
+  .pct{font-family:Helvetica,Arial,sans-serif;font-weight:900;font-size:44px;color:var(--terra);min-width:118px;text-align:center;line-height:1;transition:color .4s}
+  .pct.done{color:var(--green)}
+  .pcol{flex:1}
+  .bar{height:20px;background:#e7dcc0;border-radius:99px;overflow:hidden;box-shadow:inset 0 2px 5px rgba(43,33,24,.14)}
+  .bar i{display:block;height:100%;width:0;border-radius:99px;transition:width .6s ease;
+    background:linear-gradient(90deg,var(--terra),#e07a4e);}
+  .bar i.working{background-image:linear-gradient(90deg,var(--terra),#e07a4e),repeating-linear-gradient(45deg,rgba(255,255,255,.22) 0 10px,transparent 10px 20px);background-size:100% 100%,28px 100%;animation:stripes .7s linear infinite}
+  .status{font-family:Helvetica,Arial,sans-serif;font-size:14.5px;margin-top:10px;line-height:1.5;min-height:22px}
+  .status::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:8px;animation:pulseDot 1.2s infinite}
+  video{width:100%;max-width:400px;border-radius:16px;display:none;margin:22px auto 0;background:#000;box-shadow:0 22px 50px rgba(11,44,41,.35);animation:popIn .5s both}
+  .dl{display:none;text-align:center;margin-top:14px;animation:fadeUp .5s both}
   .dl a{font-family:Helvetica,Arial,sans-serif;font-weight:800;color:var(--teal)}
-  footer{background:var(--teal);color:var(--cream);padding:38px 24px;font-size:15px;line-height:1.7}
+  #history > div{animation:fadeUp .55s both;transition:transform .25s}
+  #history > div:hover{transform:translateY(-4px)}
+  #history > div:nth-child(2){animation-delay:.07s}
+  #history > div:nth-child(3){animation-delay:.14s}
+  #history > div:nth-child(4){animation-delay:.21s}
+  #history img{transition:transform .35s}
+  #history > div:hover img{transform:scale(1.03)}
+  footer{background:linear-gradient(160deg,var(--teal),var(--teal2));color:var(--cream);padding:38px 24px;font-size:15px;line-height:1.7}
   footer b{color:var(--gold)}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <div class="kicker">Prompt2Video</div>
+    <div class="kicker"><span class="live"></span>Prompt2Video</div>
     <div class="rule"></div>
-    <h1>Prompt likho.<br><span class="gold">Code banayega.</span><br>Video milega.</h1>
+    <h1><span class="hl">Prompt likho.</span><span class="hl gold">Code banayega.</span><span class="hl">Video milega.</span></h1>
     <p>Topic likho ya apna script paste karo — free AI usse kahani + scene-code banata hai, phir code-engine use frame-by-frame render karke Hindi narration ke saath MP4 deta hai. Koi AI-video credits nahi, koi editor nahi.</p>
     <div class="flow">
       <span><b>1</b>&nbsp; PROMPT</span><span>→</span>
@@ -141,8 +188,13 @@
         </label>
       </div>
       <button class="btn dark" id="renderBtn">Video render karo →</button>
-      <div class="bar" id="bar"><i></i></div>
-      <p class="status" id="status"></p>
+      <div class="prow" id="prow">
+        <div class="pct" id="pct">0%</div>
+        <div class="pcol">
+          <div class="bar" id="bar"><i></i></div>
+          <p class="status" id="status"></p>
+        </div>
+      </div>
       <div class="err" id="err2"></div>
       <video id="player" controls playsinline></video>
       <p class="dl" id="dlWrap"><a id="dl" href="#" download>⬇ MP4 download karo</a> &nbsp;·&nbsp; <a id="dlCover" href="#" download>Cover image</a></p>
@@ -213,6 +265,7 @@ function renderSceneEditors() {
   scriptObj.scenes.forEach((sc, i) => {
     const div = document.createElement('div');
     div.className = 'scene';
+    div.style.animationDelay = (i * 80) + 'ms';
     div.innerHTML = `
       <h3>Scene ${i + 1} — <span class="v">${sc.visual}</span></h3>
       <div class="grid2">
@@ -314,8 +367,12 @@ $('renderBtn').addEventListener('click', async () => {
   showErr('err2', '');
   $('player').style.display = 'none'; $('dlWrap').style.display = 'none';
   $('renderBtn').disabled = true;
-  $('bar').style.display = 'block'; $('status').style.display = 'block';
+  $('prow').style.display = 'flex';
+  $('pct').classList.remove('done'); $('pct').textContent = '0%';
   const barFill = $('bar').querySelector('i');
+  barFill.classList.add('working'); barFill.style.width = '2%';
+  const setP = p => { barFill.style.width = p + '%'; $('pct').textContent = p + '%';
+    $('renderBtn').textContent = 'Render ho raha hai… ' + p + '%'; };
   try {
     const res = await fetch('/api/render', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -333,7 +390,10 @@ $('renderBtn').addEventListener('click', async () => {
       const j = await r.json();
       if (j.status === 'done') {
         clearInterval(poll);
-        barFill.style.width = '100%';
+        barFill.classList.remove('working');
+        $('pct').classList.add('done');
+        setP(100);
+        $('renderBtn').textContent = 'Video render karo →';
         $('status').textContent = `Ho gaya! ${j.meta.duration}s ka video, ${j.meta.scenes} scenes.`;
         const p = $('player');
         p.src = j.video; if (j.cover) p.poster = j.cover;
@@ -345,19 +405,23 @@ $('renderBtn').addEventListener('click', async () => {
         loadHistory();
       } else if (j.status === 'error') {
         clearInterval(poll);
+        barFill.classList.remove('working');
+        $('renderBtn').textContent = 'Video render karo →';
         showErr('err2', 'Render error: ' + j.error);
         $('renderBtn').disabled = false;
       } else {
         const label = STAGE[j.stage] || 'Render ho raha hai…';
         $('status').textContent = j.stage === 'frames' && j.total
           ? `${label} ${j.done} / ${j.total} frames` : label;
-        if (j.stage === 'frames' && j.total) barFill.style.width = Math.round(j.done / j.total * 92) + '%';
-        else if (j.stage === 'mix') barFill.style.width = '97%';
-        else barFill.style.width = '8%';
+        if (j.stage === 'frames' && j.total) setP(Math.round(8 + (j.done / j.total) * 87));
+        else if (j.stage === 'mix') setP(97);
+        else setP(8);
       }
     }, 3000);
   } catch (e) {
     showErr('err2', e.message);
+    $('prow').style.display = 'none';
+    $('renderBtn').textContent = 'Video render karo →';
     $('renderBtn').disabled = false;
   }
 });
