@@ -361,7 +361,7 @@ async function loadHistory() {
 }
 loadHistory();
 
-const STAGE = {voice: 'Awaaz ban rahi hai (TTS)…', frames: 'Frames render ho rahe hain (code → video)…', mix: 'Audio + video jod rahe hain…'};
+const STAGE = {queue: 'Line me hai — pehle wale render ke khatam hone ka intezaar…', voice: 'Awaaz ban rahi hai (TTS)…', frames: 'Frames render ho rahe hain (code → video)…', mix: 'Audio + video jod rahe hain…'};
 
 $('renderBtn').addEventListener('click', async () => {
   showErr('err2', '');
@@ -388,7 +388,15 @@ $('renderBtn').addEventListener('click', async () => {
     const poll = setInterval(async () => {
       const r = await fetch('/api/job/' + jobId);
       const j = await r.json();
-      if (j.status === 'done') {
+      if (!r.ok) {
+        clearInterval(poll);
+        barFill.classList.remove('working');
+        $('renderBtn').textContent = 'Video render karo →';
+        showErr('err2', j.error === 'job not found'
+          ? 'Job kho gaya — server beech me restart ho gaya tha. Dobara render karo, ab ye fix ho chuka hai.'
+          : 'Server error: ' + (j.error || r.status));
+        $('renderBtn').disabled = false;
+      } else if (j.status === 'done') {
         clearInterval(poll);
         barFill.classList.remove('working');
         $('pct').classList.add('done');

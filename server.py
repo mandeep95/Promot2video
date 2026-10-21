@@ -25,8 +25,42 @@ import renderer  # noqa: E402
 
 OUT = os.path.join(HERE, "outputs")
 os.makedirs(OUT, exist_ok=True)
+JOBDIR = os.path.join(OUT, "jobs")  # job state survives process restarts
+os.makedirs(JOBDIR, exist_ok=True)
 JOBS = {}
 LOCK = threading.Lock()
+RENDER_LOCK = threading.Lock()  # one render at a time — 512MB is tight
+
+
+def save_job(job_id):
+    """Persist a job snapshot so a restart doesn't orphan it."""
+    try:
+        snap = dict(JOBS[job_id])
+        tmp = os.path.join(JOBDIR, f"{job_id}.json.tmp")
+        json.dump(snap, open(tmp, "w"))
+        os.replace(tmp, os.path.join(JOBDIR, f"{job_id}.json"))
+    except Exception:
+        pass
+
+
+def load_persisted_jobs():
+    """On boot: reload job state; anything mid-render died with the old
+    process, so mark it as an honest error instead of a phantom 404."""
+    for name in os.listdir(JOBDIR):
+        if not name.endswith(".json"):
+            continue
+        try:
+            job = json.load(open(os.path.join(JOBDIR, name)))
+        except Exception:
+            continue
+        if job.get("status") == "rendering":
+            job["status"] = "error"
+            job["error"] = ("Server restart ho gaya — render ruk gaya. "
+                            "Dobara render karo.")
+        JOBS[name[:-5]] = job
+
+
+load_persisted_jobs()
 
 
 def run_job(job_id, script, opts=None):
@@ -37,7 +71,9 @@ def run_job(job_id, script, opts=None):
     def progress(stage, done, total):
         with LOCK:
             job.update(stage=stage, done=done, total=total)
+        save_job(job_id)
 
+    RENDER_LOCK.acquire()
     try:
         meta = renderer.render(script, out_mp4, workdir, progress, opts)
         # cover image from an early frame + history record
@@ -56,10 +92,13 @@ def run_job(job_id, script, opts=None):
         with LOCK:
             job.update(status="done", video=record["video"],
                        cover=record["cover"], meta=meta)
+        save_job(job_id)
     except Exception as e:  # keep the error readable for the UI
         with LOCK:
             job.update(status="error", error=str(e)[:400])
+        save_job(job_id)
     finally:
+        RENDER_LOCK.release()
         import shutil
         shutil.rmtree(workdir, ignore_errors=True)
 
@@ -92,6 +131,12 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path.startswith("/api/job/"):
             job_id = self.path.split("/")[-1]
             job = JOBS.get(job_id)
+            if not job:  # fall back to the persisted snapshot
+                try:
+                    job = json.load(open(os.path.join(
+                        JOBDIR, f"{job_id}.json")))
+                except Exception:
+                    job = None
             if not job:
                 return self._json(404, {"error": "job not found"})
             self._json(200, {k: job.get(k) for k in
@@ -156,10 +201,11 @@ class Handler(BaseHTTPRequestHandler):
                         "music": bool(opts.get("music", False)),
                         "speed": float(opts.get("speed", 0.9))}
                 with LOCK:
-                    JOBS[job_id] = {"status": "rendering", "stage": "voice",
+                    JOBS[job_id] = {"status": "rendering", "stage": "queue",
                                     "done": 0, "total": 0, "video": None,
                                     "cover": None, "error": None,
                                     "meta": None}
+                save_job(job_id)
                 threading.Thread(target=run_job,
                                  args=(job_id, script, opts),
                                  daemon=True).start()
