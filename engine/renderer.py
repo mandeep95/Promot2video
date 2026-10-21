@@ -477,29 +477,72 @@ def render(script, out_mp4, workdir, on_progress=None, opts=None):
         if on_progress:
             on_progress("voice", i + 1, len(scenes))
     total_frames = sum(s["frames"] for s in layout)
-    # 2) frames
+    # 2) frames — rendered in chunks by fresh worker subprocesses.
+    # A single in-process loop leaks RSS frame over frame (PIL buffers)
+    # and gets OOM-killed near the end of long videos on small hosts;
+    # a worker that exits returns all its memory to the OS.
     fdir = os.path.join(workdir, "frames")
     os.makedirs(fdir, exist_ok=True)
+    plan = {"scenes": scenes,
+            "layout": [{"scene": i, "frames": lay["frames"]}
+                       for i, lay in enumerate(layout)]}
+    json.dump(plan, open(os.path.join(workdir, "render_plan.json"), "w"))
+    worker = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          "frame_worker.py")
+    chunk = int(os.environ.get("P2V_CHUNK", "240"))
+    parts_dir = os.path.join(workdir, "parts")
+    os.makedirs(parts_dir, exist_ok=True)
+    part_files = []
     n = 0
-    for si, lay in enumerate(layout):
-        fn, L = SCENES[lay["sc"]["visual"]], lay["frames"]
-        for lt in range(L):
-            img = fn(lt, L, lay["sc"])
-            if lt > L - FADE and si < len(layout) - 1:
-                nxt = SCENES[layout[si + 1]["sc"]["visual"]]
-                img = Image.blend(
-                    img, nxt(lt - (L - FADE), layout[si + 1]["frames"],
-                             layout[si + 1]["sc"]),
-                    (lt - (L - FADE)) / FADE)
-            img.save(os.path.join(fdir, f"f{n:05d}.png"))
-            n += 1
-            if on_progress and n % 30 == 0:
-                on_progress("frames", n, total_frames)
-    # 3) encode + mix
+    while n < total_frames:
+        b = min(n + chunk, total_frames)
+        ok, tail = False, ""
+        for _attempt in (1, 2):  # one retry per chunk
+            p = subprocess.Popen(
+                [sys.executable, worker, workdir, str(n), str(b)],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True)
+            for line in p.stdout:
+                lp = line.split()
+                if len(lp) == 3 and lp[0] == "P":
+                    if on_progress:
+                        on_progress("frames", int(lp[1]), total_frames)
+                else:
+                    tail = (tail + line)[-300:]
+            p.wait()
+            if p.returncode == 0:
+                ok = True
+                break
+        if not ok:
+            raise RuntimeError(
+                f"Frame render fail hua (frames {n}-{b}): {tail.strip()}")
+        # encode this chunk to a video part right away, then drop its
+        # PNGs — disk use stays bounded to one chunk however long the
+        # video is (a full PNG set for a 90s video is ~1GB).
+        part = os.path.join(parts_dir, f"part{len(part_files):03d}.mp4")
+        subprocess.run(
+            ["ffmpeg", "-y", "-framerate", str(FPS),
+             "-start_number", str(n), "-i",
+             os.path.join(fdir, "f%05d.png"), "-frames:v", str(b - n),
+             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
+             part], check=True, capture_output=True)
+        for k in range(n, b):
+            try:
+                os.remove(os.path.join(fdir, f"f{k:05d}.png"))
+            except OSError:
+                pass
+        part_files.append(part)
+        n = b
+    if on_progress:
+        on_progress("frames", total_frames, total_frames)
+    # 3) join the parts (identical codec settings -> stream copy) + mix
     silent = os.path.join(workdir, "silent.mp4")
-    subprocess.run(["ffmpeg", "-y", "-framerate", str(FPS), "-i",
-                    os.path.join(fdir, "f%05d.png"), "-c:v", "libx264",
-                    "-pix_fmt", "yuv420p", "-crf", "18", silent],
+    listfile = os.path.join(workdir, "parts.txt")
+    with open(listfile, "w") as f:
+        for part in part_files:
+            f.write(f"file '{part}'\n")
+    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i",
+                    listfile, "-c", "copy", silent],
                    check=True, capture_output=True)
     if on_progress:
         on_progress("mix", 1, 1)
