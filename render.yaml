@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: prompt2video
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: bash start.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.11
+      - key: PYTHONUNBUFFERED
+        value: "1"

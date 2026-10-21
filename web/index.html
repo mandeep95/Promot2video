@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt2Video — Prompt likho, Code banayega, Video milega</title>
+<style>
+  :root{
+    --teal:#0b2c29; --teal2:#14524b; --cream:#f3eee3; --paper:#faf3e4;
+    --gold:#cdab6e; --terra:#c75b39; --ink:#2b2118;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Georgia,'Times New Roman',serif;background:var(--cream);color:var(--ink)}
+  .sans{font-family:Helvetica,Arial,sans-serif}
+  header{background:var(--teal);color:var(--cream);padding:64px 24px 54px}
+  .wrap{max-width:880px;margin:0 auto}
+  .kicker{font-family:Helvetica,Arial,sans-serif;letter-spacing:5px;font-size:13px;color:var(--gold);text-transform:uppercase}
+  .rule{width:110px;height:6px;background:var(--gold);margin:16px 0 26px}
+  h1{font-family:Helvetica,Arial,sans-serif;font-weight:900;font-size:clamp(42px,8vw,84px);line-height:.98;letter-spacing:-1px}
+  h1 .gold{color:var(--gold)}
+  header p{margin-top:22px;font-size:19px;line-height:1.55;max-width:620px;opacity:.92}
+  .flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;font-family:Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:1px}
+  .flow span{border:1px solid rgba(243,238,227,.4);border-radius:99px;padding:8px 16px}
+  .flow b{color:var(--gold)}
+  main{padding:44px 24px 70px}
+  .card{background:var(--paper);border:1px solid #e2d5b8;border-radius:18px;padding:28px;margin-bottom:26px;box-shadow:0 10px 30px rgba(43,33,24,.06)}
+  .step{font-family:Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:3px;color:var(--terra);text-transform:uppercase;margin-bottom:14px}
+  h2{font-family:Helvetica,Arial,sans-serif;font-size:26px;font-weight:800;margin-bottom:16px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tab{font-family:Helvetica,Arial,sans-serif;font-size:14px;padding:10px 18px;border-radius:99px;border:2px solid var(--teal);background:transparent;color:var(--teal);cursor:pointer;font-weight:700}
+  .tab.on{background:var(--teal);color:var(--cream)}
+  label{display:block;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:.4px;margin:16px 0 7px}
+  textarea,input,select{width:100%;font-family:Helvetica,Arial,sans-serif;font-size:16px;padding:13px 14px;border:1.5px solid #cdbd97;border-radius:12px;background:#fff;color:var(--ink)}
+  textarea{line-height:1.5;resize:vertical}
+  .hint{font-size:13.5px;opacity:.75;margin-top:7px;line-height:1.5}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-family:Helvetica,Arial,sans-serif;font-size:13px;background:#efe3c8;border:1px solid #d9c491;padding:7px 13px;border-radius:99px;cursor:pointer}
+  .btn{font-family:Helvetica,Arial,sans-serif;font-weight:800;font-size:17px;border:none;border-radius:14px;padding:16px 26px;cursor:pointer;margin-top:22px;width:100%}
+  .btn.primary{background:var(--terra);color:#fff}
+  .btn.dark{background:var(--teal);color:var(--cream)}
+  .btn:disabled{opacity:.5;cursor:wait}
+  .err{display:none;background:#fbe9e4;border:1px solid var(--terra);color:#7c2d1c;border-radius:12px;padding:13px 16px;margin-top:16px;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.5}
+  .scene{border:1.5px dashed #cdbd97;border-radius:14px;padding:18px;margin-top:16px;background:#fff}
+  .scene h3{font-family:Helvetica,Arial,sans-serif;font-size:15px;margin-bottom:6px}
+  .scene h3 .v{color:var(--terra)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .bar{height:16px;background:#e7dcc0;border-radius:99px;overflow:hidden;margin-top:14px;display:none}
+  .bar i{display:block;height:100%;width:0;background:var(--terra);transition:width .5s}
+  .status{font-family:Helvetica,Arial,sans-serif;font-size:14.5px;margin-top:12px;display:none;line-height:1.5}
+  video{width:100%;max-width:400px;border-radius:16px;display:none;margin:20px auto 0;background:#000}
+  .dl{display:none;text-align:center;margin-top:14px}
+  .dl a{font-family:Helvetica,Arial,sans-serif;font-weight:800;color:var(--teal)}
+  footer{background:var(--teal);color:var(--cream);padding:38px 24px;font-size:15px;line-height:1.7}
+  footer b{color:var(--gold)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="kicker">Prompt2Video</div>
+    <div class="rule"></div>
+    <h1>Prompt likho.<br><span class="gold">Code banayega.</span><br>Video milega.</h1>
+    <p>Topic likho ya apna script paste karo — free AI usse kahani + scene-code banata hai, phir code-engine use frame-by-frame render karke Hindi narration ke saath MP4 deta hai. Koi AI-video credits nahi, koi editor nahi.</p>
+    <div class="flow">
+      <span><b>1</b>&nbsp; PROMPT</span><span>→</span>
+      <span><b>2</b>&nbsp; FREE AI SCRIPT</span><span>→</span>
+      <span><b>3</b>&nbsp; CODE → FRAMES</span><span>→</span>
+      <span><b>4</b>&nbsp; MP4 REEL</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="card">
+      <div class="step">Step 1 — Input</div>
+      <h2>Video kis baare me ho?</h2>
+      <div class="tabs">
+        <button class="tab on" data-mode="groq">Free AI (Groq)</button>
+        <button class="tab" data-mode="demo">Demo — bina key</button>
+        <button class="tab" data-mode="paste">Apna script paste karo</button>
+      </div>
+
+      <div id="promptBox">
+        <label for="prompt">Prompt</label>
+        <textarea id="prompt" rows="3" placeholder="e.g. Law 45 par ek kahani — dukaan wala sab kuch ek saath badal deta hai"></textarea>
+        <div class="chips">
+          <span class="chip">Law 45 par kahani</span>
+          <span class="chip">Law 6 par kahani</span>
+          <span class="chip">Law 1 par kahani</span>
+          <span class="chip">Consistency par motivation</span>
+        </div>
+      </div>
+
+      <div id="pasteBox" style="display:none">
+        <label for="pasteText">Apna script / screen text (har khaali line = naya scene)</label>
+        <textarea id="pasteText" rows="7" placeholder="पहले scene की narration यहाँ लिखो।&#10;&#10;दूसरे scene की narration यहाँ।&#10;&#10;तीसरे scene की narration यहाँ।"></textarea>
+        <p class="hint">Narration Hindi (Devanagari) me likho — awaaz usi ko padhegi. Har paragraph ek scene banega, aakhir me moral card apne aap jud jayega.</p>
+      </div>
+
+      <div id="keyBox">
+        <label for="apiKey">Groq API key (free — groq.com se milti hai)</label>
+        <input id="apiKey" type="password" placeholder="gsk_..." autocomplete="off">
+        <p class="hint">Key sirf tumhare browser me save hoti hai, server par store nahi hoti. Free tier par script-generate lagbhag free hai. Key nahi hai? "Demo — bina key" mode use karo.</p>
+      </div>
+
+      <label for="brand">Branding / channel naam (closing card par)</label>
+      <input id="brand" type="text" placeholder="e.g. DeepGyan">
+
+      <button class="btn primary" id="genBtn">Script banao →</button>
+      <div class="err" id="err1"></div>
+    </div>
+
+    <div class="card" id="scriptCard" style="display:none">
+      <div class="step">Step 2 — Script (edit kar sakte ho)</div>
+      <h2 id="scriptTitle">Script</h2>
+      <div id="scenes"></div>
+      <div class="grid2">
+        <div><label>Awaaz (voice)</label>
+          <select id="voice">
+            <option value="hi">Hindi — Male (Rohan)</option>
+            <option value="en">English — Female (Amy)</option>
+          </select></div>
+        <div><label>Awaaz ki speed</label>
+          <select id="speed">
+            <option value="0.84">Tez</option>
+            <option value="0.9" selected>Normal</option>
+            <option value="1.0">Dheere (saaf)</option>
+          </select></div>
+      </div>
+      <label style="display:flex;gap:10px;align-items:center;font-size:15px">
+        <input type="checkbox" id="music" style="width:auto" checked>
+        Background music (halki instrumental, code se bani)
+      </label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <button class="chip" id="saveScript" type="button">⬇ Script JSON save karo</button>
+        <label class="chip" style="margin:0;cursor:pointer">⬆ Purana script load karo
+          <input type="file" id="loadScript" accept=".json" style="display:none">
+        </label>
+      </div>
+      <button class="btn dark" id="renderBtn">Video render karo →</button>
+      <div class="bar" id="bar"><i></i></div>
+      <p class="status" id="status"></p>
+      <div class="err" id="err2"></div>
+      <video id="player" controls playsinline></video>
+      <p class="dl" id="dlWrap"><a id="dl" href="#" download>⬇ MP4 download karo</a> &nbsp;·&nbsp; <a id="dlCover" href="#" download>Cover image</a></p>
+    </div>
+
+    <div class="card" id="historyCard" style="display:none">
+      <div class="step">History</div>
+      <h2>Purane bane videos</h2>
+      <div id="history" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>Kaise kaam karta hai:</b> AI sirf script likhta hai (JSON). Asli video code banata hai — har frame ek function ka output hai, awaaz local Piper TTS se aati hai, ffmpeg sab jodta hai. Isliye ek video ki cost = <b>₹0</b>.<br>
+    <b>Samay:</b> render server ki speed par hai — 30 second ke video ko yahan ~2–3 minute lagte hain. Video 1080×1920 (Reels/Shorts size) banta hai.
+  </div>
+</footer>
+
+<script>
+let mode = 'groq';
+let scriptObj = null;
+
+const $ = id => document.getElementById(id);
+$('apiKey').value = localStorage.getItem('p2v_groq_key') || '';
+$('brand').value = localStorage.getItem('p2v_brand') || '';
+$('apiKey').addEventListener('change', e => localStorage.setItem('p2v_groq_key', e.target.value));
+$('brand').addEventListener('change', e => localStorage.setItem('p2v_brand', e.target.value));
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  mode = t.dataset.mode;
+  $('promptBox').style.display = mode === 'paste' ? 'none' : 'block';
+  $('pasteBox').style.display = mode === 'paste' ? 'block' : 'none';
+  $('keyBox').style.display = mode === 'groq' ? 'block' : 'none';
+}));
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  $('prompt').value = c.textContent.replace(' par kahani', ' par kahani banao').replace('Consistency par motivation', 'Consistency par ek motivational kahani');
+  if (mode !== 'groq' && mode !== 'demo') document.querySelector('[data-mode="demo"]').click();
+}));
+
+function showErr(id, msg) { const e = $(id); e.textContent = msg; e.style.display = msg ? 'block' : 'none'; }
+
+const VISUALS = ['stall_happy','stall_idea','stall_board','stall_empty','stall_talk','stall_gradual','stall_result','quote','card','phone_closeup','split_compare','growth_chart'];
+
+function pillText(pill) { return (pill || []).map(s => s[0]).join(''); }
+function pillHL(pill) { const h = (pill || []).find(s => s[1]); return h ? h[0] : ''; }
+function buildPill(text, hl) {
+  if (!text) return [];
+  if (hl && text.includes(hl)) {
+    const [a, b] = text.split(hl);
+    const out = [];
+    if (a) out.push([a, false]);
+    out.push([hl, true]);
+    if (b) out.push([b, false]);
+    return out;
+  }
+  return [[text, false]];
+}
+
+function renderSceneEditors() {
+  $('scriptTitle').textContent = scriptObj.title || 'Script';
+  const box = $('scenes');
+  box.innerHTML = '';
+  scriptObj.scenes.forEach((sc, i) => {
+    const div = document.createElement('div');
+    div.className = 'scene';
+    div.innerHTML = `
+      <h3>Scene ${i + 1} — <span class="v">${sc.visual}</span></h3>
+      <div class="grid2">
+        <div><label>Visual style</label>
+          <select data-i="${i}" data-f="visual">${VISUALS.map(v => `<option ${v === sc.visual ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div><label>Headline (screen par bada text)</label>
+          <input data-i="${i}" data-f="headline" value="${(sc.headline || '').replace(/"/g, '&quot;')}"></div>
+      </div>
+      <label>Narration (Hindi — awaaz ye padhegi)</label>
+      <textarea rows="3" data-i="${i}" data-f="narration">${sc.narration || ''}</textarea>
+      <div class="grid2">
+        <div><label>Subtitle line (neeche pill me)</label>
+          <input data-i="${i}" data-f="pill_text" value="${pillText(sc.pill).replace(/"/g, '&quot;')}"></div>
+        <div><label>Highlight word (peela hoga)</label>
+          <input data-i="${i}" data-f="pill_hl" value="${pillHL(sc.pill).replace(/"/g, '&quot;')}"></div>
+      </div>
+      ${(sc.lines) ? `<p class="hint">Card lines: ${sc.lines.join(' / ')}</p>` : ''}
+      ${(sc.bubble) ? `<p class="hint">Speech bubble: ${sc.bubble.join(' ')}</p>` : ''}
+      ${(sc.checklist) ? `<p class="hint">Checklist: ${sc.checklist.join(' · ')}</p>` : ''}`;
+    box.appendChild(div);
+  });
+  box.querySelectorAll('[data-i]').forEach(el => el.addEventListener('change', () => {
+    const sc = scriptObj.scenes[+el.dataset.i];
+    const f = el.dataset.f;
+    if (f === 'pill_text' || f === 'pill_hl') {
+      const text = box.querySelector(`[data-i="${el.dataset.i}"][data-f="pill_text"]`).value;
+      const hl = box.querySelector(`[data-i="${el.dataset.i}"][data-f="pill_hl"]`).value;
+      sc.pill = buildPill(text, hl);
+    } else {
+      sc[f] = el.value;
+    }
+  }));
+}
+
+$('genBtn').addEventListener('click', async () => {
+  showErr('err1', '');
+  $('genBtn').disabled = true; $('genBtn').textContent = 'Script ban raha hai…';
+  try {
+    const res = await fetch('/api/script', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        mode,
+        prompt: $('prompt').value,
+        text: $('pasteText').value,
+        api_key: $('apiKey').value.trim(),
+        brand: $('brand').value.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Script nahi bana');
+    scriptObj = data.script;
+    $('scriptCard').style.display = 'block';
+    renderSceneEditors();
+    $('scriptCard').scrollIntoView({behavior: 'smooth'});
+  } catch (e) { showErr('err1', e.message); }
+  $('genBtn').disabled = false; $('genBtn').textContent = 'Script banao →';
+});
+
+$('saveScript').addEventListener('click', () => {
+  if (!scriptObj) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(scriptObj, null, 1)], {type: 'application/json'}));
+  a.download = 'prompt2video-script.json';
+  a.click();
+});
+$('loadScript').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    scriptObj = JSON.parse(await f.text());
+    if (!scriptObj.scenes) throw new Error('bad file');
+    $('scriptCard').style.display = 'block';
+    renderSceneEditors();
+  } catch (_) { showErr('err1', 'Script file samajh nahi aayi.'); }
+});
+
+async function loadHistory() {
+  try {
+    const r = await fetch('/api/history');
+    const d = await r.json();
+    if (!d.items || !d.items.length) return;
+    $('historyCard').style.display = 'block';
+    $('history').innerHTML = d.items.map(it => `
+      <div>
+        <img src="${it.cover}" alt="" style="width:100%;border-radius:12px;aspect-ratio:9/16;object-fit:cover;background:#ddd">
+        <p class="sans" style="font-size:13px;font-weight:700;margin-top:7px;line-height:1.35">${it.title}</p>
+        <p class="sans" style="font-size:12px;opacity:.7">${it.duration}s · ${it.scenes} scenes</p>
+        <p class="sans" style="font-size:13px;margin-top:4px">
+          <a href="${it.video}" target="_blank">▶ Dekho</a> · <a href="${it.video}" download>⬇ MP4</a>
+        </p>
+      </div>`).join('');
+  } catch (_) {}
+}
+loadHistory();
+
+const STAGE = {voice: 'Awaaz ban rahi hai (TTS)…', frames: 'Frames render ho rahe hain (code → video)…', mix: 'Audio + video jod rahe hain…'};
+
+$('renderBtn').addEventListener('click', async () => {
+  showErr('err2', '');
+  $('player').style.display = 'none'; $('dlWrap').style.display = 'none';
+  $('renderBtn').disabled = true;
+  $('bar').style.display = 'block'; $('status').style.display = 'block';
+  const barFill = $('bar').querySelector('i');
+  try {
+    const res = await fetch('/api/render', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({script: scriptObj, options: {
+        voice: $('voice').value,
+        speed: parseFloat($('speed').value),
+        music: $('music').checked,
+      }}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Render start nahi hua');
+    const jobId = data.job_id;
+    const poll = setInterval(async () => {
+      const r = await fetch('/api/job/' + jobId);
+      const j = await r.json();
+      if (j.status === 'done') {
+        clearInterval(poll);
+        barFill.style.width = '100%';
+        $('status').textContent = `Ho gaya! ${j.meta.duration}s ka video, ${j.meta.scenes} scenes.`;
+        const p = $('player');
+        p.src = j.video; if (j.cover) p.poster = j.cover;
+        p.style.display = 'block';
+        $('dl').href = j.video;
+        if (j.cover) $('dlCover').href = j.cover;
+        $('dlWrap').style.display = 'block';
+        $('renderBtn').disabled = false;
+        loadHistory();
+      } else if (j.status === 'error') {
+        clearInterval(poll);
+        showErr('err2', 'Render error: ' + j.error);
+        $('renderBtn').disabled = false;
+      } else {
+        const label = STAGE[j.stage] || 'Render ho raha hai…';
+        $('status').textContent = j.stage === 'frames' && j.total
+          ? `${label} ${j.done} / ${j.total} frames` : label;
+        if (j.stage === 'frames' && j.total) barFill.style.width = Math.round(j.done / j.total * 92) + '%';
+        else if (j.stage === 'mix') barFill.style.width = '97%';
+        else barFill.style.width = '8%';
+      }
+    }, 3000);
+  } catch (e) {
+    showErr('err2', e.message);
+    $('renderBtn').disabled = false;
+  }
+});
+</script>
+</body>
+</html>
